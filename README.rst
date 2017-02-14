@@ -50,7 +50,7 @@ To create a PQ simply do:
     # Should print:
     # 1 2 3 4 5 6 7 9 20 25
 
-    handle_10.value = 10      #   Modify its value using the same opaque pointer as before
+    handle_10.value = 10      #   Modify its value using the same opaque handle as before
     pq.adjust(handle_10)      #   Indicate to the heap to reprioritise/adjust it
 
     print list(pq)

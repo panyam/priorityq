@@ -1,9 +1,9 @@
 
-class Pointer(object):
+class Handle(object):
     """
-    Base class of all reference/pointers to actual values contained
+    Base class of all reference/handles to actual values contained
     in the internal nodes of a PQ.  Specific implementations of priority
-    queues/heaps would inherit from this and return these pointer values
+    queues/heaps would inherit from this and return these handle values
     which can also be passed back to a queue.
     """
     def __init__(self, value):
@@ -21,14 +21,14 @@ class HeapStorage(object):
 
     def push(self, value):
         """
-        Pushes a new value onto this heap storage and returns a Pointer
+        Pushes a new value onto this heap storage and returns a Handle
         to the node in question.
         """
         return None
 
     def top(self):
         """
-        Returns a pointer to the top value.
+        Returns a handle to the top value.
         """
         return None
 
@@ -40,15 +40,15 @@ class HeapStorage(object):
 
     def find(self, value, from = None):
         """
-        Returns a pointer to the node that contains the particular key.
+        Returns a handle to the node that contains the particular key.
         If the from parameter is provided, then the seach is performed relative
-        to that pointer (in case of duplicate keys).
+        to that handle (in case of duplicate keys).
         """
         return None
 
-    def remove(self, pointer):
+    def remove(self, handle):
         """
-        Removes the node referenced by the pointer from the heap.
+        Removes the node referenced by the handle from the heap.
         """
         pass
 

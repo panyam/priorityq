@@ -12,24 +12,24 @@ class PQ(object):
 
     def push(self, value):
         ptr = self.storage.push(value)
-        if value not in self.pointersByValue:
-            self.pointersByValue[value] = []
-        self.pointersByValue[value].append(ptr)
+        if value not in self.handlesByValue:
+            self.handlesByValue[value] = []
+        self.handlesByValue[value].append(ptr)
         return ptr
 
     def remove(self, value):
-        if self.pointersByValue[value]:
-            ptr = self.pointersByValue[value][0]
+        if self.handlesByValue[value]:
+            ptr = self.handlesByValue[value][0]
             self.storage.remove(ptr)
-        self.pointersByValue[pointer.value].remove(pointer)
+        self.handlesByValue[handle.value].remove(handle)
 
     def find(self, value):
         """
-        Returns a pointer to the node that contains the particular key.
+        Returns a handle to the node that contains the particular key.
         If the from parameter is provided, then the seach is performed relative
-        to that pointer (in case of duplicate keys).
+        to that handle (in case of duplicate keys).
         """
-        v = self.pointersByValue.get(value, [])
+        v = self.handlesByValue.get(value, [])
         if v: v = v[0]
         return v
 

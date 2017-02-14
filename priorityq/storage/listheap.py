@@ -1,7 +1,7 @@
 
 import base
 
-class ListHeapStorage(base.Pointer):
+class ListHeapStorage(base.Handle):
     """
     A heap implemented as an array of elements where a node at index 
     i has children at indexes 2*i+1 and 2*i+2
@@ -19,7 +19,7 @@ class ListHeapStorage(base.Pointer):
 
     def top(self):
         """
-        Returns a pointer to the top value.
+        Returns a handle to the top value.
         """
         return self.values[0]
 
@@ -38,12 +38,12 @@ class ListHeapStorage(base.Pointer):
 
     def push(self, value):
         """
-        Pushes a new value onto this heap storage and returns a Pointer
+        Pushes a new value onto this heap storage and returns a Handle
         to the node in question.
         """
         # Disallow duplicate values for now
         curr = len(self.values)
-        currptr = ListHeapStorage.Pointer(value, 0)
+        currptr = ListHeapStorage.Handle(value, 0)
         if self.count >= curr:
             currptr.index = curr
             # we are saturated so add to end and upheap
@@ -66,17 +66,17 @@ class ListHeapStorage(base.Pointer):
         """
         return self.remove(self.values[0])
 
-    def reheap(self, pointer):
+    def reheap(self, handle):
         """
-        Called when the value pointed by the pointer has been updated so a 
+        Called when the value pointed by the handle has been updated so a 
         possible reheaping is required.
         """
         # Try moving it up heap if required
-        curr = pointer.index
+        curr = handle.index
         if self._upheap(curr) == curr:
             # nothing happened, then try down heaping it
             size = len(self.values)
-            curr = pointer.index
+            curr = handle.index
             while curr < size:
                 left = 2 * curr + 1
                 right = 2 * curr + 2
@@ -97,25 +97,25 @@ class ListHeapStorage(base.Pointer):
                     smaller = right
 
                 # See we are smaller than the "smaller" child, if not, swap with it
-                if self.cmpfunc(pointer.value, self.values[smaller].value) < 0:
+                if self.cmpfunc(handle.value, self.values[smaller].value) < 0:
                     # We are smaller than the smaller child so we are in right spot
                     return
 
                 # otherwise swap
                 self.values[curr] = self.values[smaller]
                 self.values[curr].index = curr
-                self.values[smaller] = pointer
+                self.values[smaller] = handle
                 self.values[smaller].index = smaller
                 curr = smaller
-            return pointer
+            return handle
         
-    def remove(self, pointer):
+    def remove(self, handle):
         """
-        Removes the node referenced by the pointer from the heap.
+        Removes the node referenced by the handle from the heap.
         """
         size = len(self.values)
-        pointer = self.values[curr]
-        curr = pointer.index
+        handle = self.values[curr]
+        curr = handle.index
         while curr < size:
             left = 2 * curr + 1
             right = 2 * curr + 2
@@ -136,12 +136,12 @@ class ListHeapStorage(base.Pointer):
                     which = right
             self.values[curr] = self.values[which]
             self.values[curr].index = curr
-            self.values[which] = pointer
+            self.values[which] = handle
             self.values[which].index = which
             curr = which
         self.count -= 1
-        self.values[pointer.index] = None
-        return pointer
+        self.values[handle.index] = None
+        return handle
 
     def _upheap(self, curr):
         while curr > 0:
@@ -155,9 +155,9 @@ class ListHeapStorage(base.Pointer):
             curr = parent
         return curr
 
-    class Pointer(base.Pointer):
+    class Handle(base.Handle):
         def __init__(self, value, index):
-            super(ListHeapStorage.Pointer, self).__init__(value)
+            super(ListHeapStorage.Handle, self).__init__(value)
             self.index = index
 
         def __repr__(self): return str(self)
