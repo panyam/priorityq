@@ -1,21 +1,14 @@
 
-if True:
-    import base
-    BASE_HEAP_STORAGE = base.Pointer
-    BASE_POINTER = base.Pointer
-else:
-    BASE_HEAP_STORAGE = object
-    BASE_POINTER = object
+import base
 
-class ListHeapStorage(BASE_HEAP_STORAGE):
+class ListHeapStorage(base.Pointer):
     """
-    A heap implemented as an array of elements where a node at index i has children at indexes
-    2*i+1 and 2*i+2
+    A heap implemented as an array of elements where a node at index 
+    i has children at indexes 2*i+1 and 2*i+2
     """
     def __init__(self, cmpfunc = cmp):
         self.cmpfunc = cmpfunc
         self.values = []
-        self.pointersByValue = {}
         self.count = 0
 
     def heapify(self, values):
@@ -30,14 +23,7 @@ class ListHeapStorage(BASE_HEAP_STORAGE):
         """
         return self.values[0]
 
-    def find(self, value, fromnode = None):
-        """
-        Returns a pointer to the node that contains the particular key.
-        If the from parameter is provided, then the seach is performed relative
-        to that pointer (in case of duplicate keys).
-        """
-        return self.pointersByValue.get(value, None)
-
+    @property
     def is_empty(self):
         """
         Tells if the heap is empty.
@@ -56,11 +42,8 @@ class ListHeapStorage(BASE_HEAP_STORAGE):
         to the node in question.
         """
         # Disallow duplicate values for now
-        assert value not in self.pointersByValue
-
         curr = len(self.values)
         currptr = ListHeapStorage.Pointer(value, 0)
-        self.pointersByValue[value] = currptr
         if self.count >= curr:
             currptr.index = curr
             # we are saturated so add to end and upheap
@@ -130,12 +113,9 @@ class ListHeapStorage(BASE_HEAP_STORAGE):
         """
         Removes the node referenced by the pointer from the heap.
         """
-        out = self._downheap(pointer.index)
-        return out.value
-
-    def _downheap(self, curr):
         size = len(self.values)
         pointer = self.values[curr]
+        curr = pointer.index
         while curr < size:
             left = 2 * curr + 1
             right = 2 * curr + 2
@@ -161,7 +141,6 @@ class ListHeapStorage(BASE_HEAP_STORAGE):
             curr = which
         self.count -= 1
         self.values[pointer.index] = None
-        del self.pointersByValue[pointer.value]
         return pointer
 
     def _upheap(self, curr):
@@ -176,12 +155,9 @@ class ListHeapStorage(BASE_HEAP_STORAGE):
             curr = parent
         return curr
 
-    class Pointer(BASE_POINTER):
+    class Pointer(base.Pointer):
         def __init__(self, value, index):
-            if BASE_POINTER == object:
-                self.value = value
-            else:
-                super(ListHeapStorage.Pointer, self).__init__(value)
+            super(ListHeapStorage.Pointer, self).__init__(value)
             self.index = index
 
         def __repr__(self): return str(self)
