@@ -8,7 +8,7 @@ def test_basic():
     pq = PQ(values)
     assert sorted(values) == list(pq)
     for v in sorted(values):
-        assert v == pq.pop().value
+        assert v == pq.pop()
 
 def test_reverse():
     values = [5,1,10,4,2,6,7]
@@ -17,4 +17,4 @@ def test_reverse():
     revlist = list(reversed(sorted(values)))
     assert revlist == list(pq)
     for v in revlist:
-        assert v == pq.pop().value
+        assert v == pq.pop()
