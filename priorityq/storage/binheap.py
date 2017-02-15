@@ -8,14 +8,20 @@ class Storage(BaseStorage):
     i has children at indexes 2*i+1 and 2*i+2
     """
     def __init__(self, cmpfunc = cmp):
-        self.values = []
-        self.set_comparator(cmpfunc)
+        self._values = []
+        self._cmpfunc = cmpfunc
+        self.comparator = cmpfunc
 
-    def set_comparator(self, cmpfunc):
-        self.cmpfunc = cmpfunc
-        old_values = self.values
-        self.count = 0
-        self.values = []
+    @property
+    def comparator(self):
+        return self._cmpfunc
+
+    @comparator.setter
+    def comparator(self, cmpfunc):
+        self._cmpfunc = cmpfunc
+        self._count = 0
+        old_values = self._values
+        self._values = []
         for v in old_values:
             if v:
                 self.push_handle(v)
@@ -23,36 +29,37 @@ class Storage(BaseStorage):
     def heapify(self, values):
         """
         Adds a bunch of values to the heap.
+        Returns the handles to all the values inserted
         """
-        for v in values: self.push(v)
+        return map(self.push, values)
 
     @property
     def top(self):
         """
         Returns a handle to the top value.
         """
-        return self.values[0]
+        return self._values[0]
 
     @property
     def is_empty(self):
         """
         Tells if the heap is empty.
         """
-        return self.count == 0
+        return self._count == 0
 
     def __iter__(self):
         """
         Iterates through the values yielding them in order of priority.
         """
-        out = self.values[:]
-        out.sort(cmp = self.cmpfunc)
+        out = self._values[:]
+        out.sort(cmp = self._cmpfunc)
         for handle in out: yield handle.value
 
     def __len__(self):
         """
         Returns the number of elements in the heap.
         """
-        return self.count
+        return self._count
 
     def push(self, value):
         """
@@ -62,6 +69,7 @@ class Storage(BaseStorage):
         # Disallow duplicate values for now
         currptr = Storage.Handle(value, 0)
         self._push_handle(currptr)
+        return currptr
 
     def _push_handle(self, handle):
         """
@@ -69,28 +77,28 @@ class Storage(BaseStorage):
         This method is called from the push (or set_comparator)
         methods.
         """
-        curr = len(self.values)
-        if self.count >= curr:
+        curr = len(self._values)
+        if self._count >= curr:
             handle.index = curr
             # we are saturated so add to end and upheap
-            self.values.append(handle)
+            self._values.append(handle)
         else:
             # find the first spot and upheap from there
-            for i,n in enumerate(self.values):
+            for i,n in enumerate(self._values):
                 if n is None:
                     handle.index = i
-                    self.values[i] = handle
+                    self._values[i] = handle
                     break
-        self.count += 1
+        self._count += 1
         
         # So handle is at a given point, so upheap from there
-        self.values[self._upheap(handle.index)]
+        self._values[self._upheap(handle.index)]
 
     def pop(self):
         """
         Pops the top value and returns the value held by the last top value.
         """
-        return self.remove(self.values[0])
+        return self.remove(self._values[0])
 
     def reheap(self, handle):
         """
@@ -101,13 +109,13 @@ class Storage(BaseStorage):
         curr = handle.index
         if self._upheap(curr) == curr:
             # nothing happened, then try down heaping it
-            size = len(self.values)
+            size = len(self._values)
             curr = handle.index
             while curr < size:
                 left = 2 * curr + 1
                 right = 2 * curr + 2
-                leftPtr = None if left >= size else self.values[left]
-                rightPtr = None if right >= size else self.values[right]
+                leftPtr = None if left >= size else self._values[left]
+                rightPtr = None if right >= size else self._values[right]
                 if not leftPtr and not rightPtr: 
                     # we are in the right spot
                     return
@@ -117,21 +125,21 @@ class Storage(BaseStorage):
                     smaller = right
                 elif not rightPtr and leftPtr:
                     smaller = left 
-                elif self.cmpfunc(leftPtr.value, rightPtr.value) < 0:
+                elif self._cmpfunc(leftPtr.value, rightPtr.value) < 0:
                     smaller = left
                 else:
                     smaller = right
 
                 # See we are smaller than the "smaller" child, if not, swap with it
-                if self.cmpfunc(handle.value, self.values[smaller].value) < 0:
+                if self._cmpfunc(handle.value, self._values[smaller].value) < 0:
                     # We are smaller than the smaller child so we are in right spot
                     return
 
                 # otherwise swap
-                self.values[curr] = self.values[smaller]
-                self.values[curr].index = curr
-                self.values[smaller] = handle
-                self.values[smaller].index = smaller
+                self._values[curr] = self._values[smaller]
+                self._values[curr].index = curr
+                self._values[smaller] = handle
+                self._values[smaller].index = smaller
                 curr = smaller
             return handle
         
@@ -139,15 +147,14 @@ class Storage(BaseStorage):
         """
         Removes the node referenced by the handle from the heap.
         """
-        size = len(self.values)
-        handle = self.values[curr]
+        size = len(self._values)
         curr = handle.index
         while curr < size:
             left = 2 * curr + 1
             right = 2 * curr + 2
-            leftPtr = None if left >= size else self.values[left]
-            rightPtr = None if right >= size else self.values[right]
-            # self.values[curr] = None
+            leftPtr = None if left >= size else self._values[left]
+            rightPtr = None if right >= size else self._values[right]
+            # self._values[curr] = None
             which = -1
             if not leftPtr and rightPtr:
                 which = right
@@ -156,28 +163,28 @@ class Storage(BaseStorage):
             elif not leftPtr and not rightPtr:
                 break
             else:
-                if self.cmpfunc(leftPtr.value, rightPtr.value) < 0:
+                if self._cmpfunc(leftPtr.value, rightPtr.value) < 0:
                     which = left
                 else:
                     which = right
-            self.values[curr] = self.values[which]
-            self.values[curr].index = curr
-            self.values[which] = handle
-            self.values[which].index = which
+            self._values[curr] = self._values[which]
+            self._values[curr].index = curr
+            self._values[which] = handle
+            self._values[which].index = which
             curr = which
-        self.count -= 1
-        self.values[handle.index] = None
+        self._count -= 1
+        self._values[handle.index] = None
         return handle
 
     def _upheap(self, curr):
         while curr > 0:
             parent = (curr - 1) / 2
-            if self.cmpfunc(self.values[parent].value,self.values[curr].value) <= 0:
+            if self._cmpfunc(self._values[parent].value,self._values[curr].value) <= 0:
                 break
             # swap the entries
-            self.values[parent].index = curr
-            self.values[curr].index = parent
-            self.values[parent],self.values[curr] = self.values[curr],self.values[parent]
+            self._values[parent].index = curr
+            self._values[curr].index = parent
+            self._values[parent],self._values[curr] = self._values[curr],self._values[parent]
             curr = parent
         return curr
 

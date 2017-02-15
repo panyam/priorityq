@@ -1,15 +1,18 @@
 
 class PQ(object):
-    def __init__(self, values = None, store = None, comparator = cmp):
+    def __init__(self, values = None, comparator = cmp,
+                 allow_duplicates = False, store = None):
         if not store:
             from storage import binheap
             store = binheap.Storage()
+        self.allow_duplicates = allow_duplicates
         self.storage = store
-        self.storage.comparator = cmp
+        self.storage.comparator = comparator
 
-        self.handlesByValue = {}
         values = values or []
-        for v in values: self.push(v)
+        self.handlesByValue = {}
+        handles = self.storage.heapify(values)
+        for h in handles: self.handlesByValue[h.value] = h
 
     def top(self):
         return self.storage.top()
