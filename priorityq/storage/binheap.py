@@ -1,15 +1,24 @@
 
-import base
+from base import Handle as BaseHandle
+from base import Storage as BaseStorage
 
-class ListHeapStorage(base.Handle):
+class Storage(BaseStorage):
     """
     A heap implemented as an array of elements where a node at index 
     i has children at indexes 2*i+1 and 2*i+2
     """
     def __init__(self, cmpfunc = cmp):
-        self.cmpfunc = cmpfunc
         self.values = []
+        self.set_comparator(cmpfunc)
+
+    def set_comparator(self, cmpfunc):
+        self.cmpfunc = cmpfunc
+        old_values = self.values
         self.count = 0
+        self.values = []
+        for v in old_values:
+            if v:
+                self.push_handle(v)
 
     def heapify(self, values):
         """
@@ -17,6 +26,7 @@ class ListHeapStorage(base.Handle):
         """
         for v in values: self.push(v)
 
+    @property
     def top(self):
         """
         Returns a handle to the top value.
@@ -30,6 +40,14 @@ class ListHeapStorage(base.Handle):
         """
         return self.count == 0
 
+    def __iter__(self):
+        """
+        Iterates through the values yielding them in order of priority.
+        """
+        out = self.values[:]
+        out.sort(cmp = self.cmpfunc)
+        for handle in out: yield handle.value
+
     def __len__(self):
         """
         Returns the number of elements in the heap.
@@ -42,23 +60,31 @@ class ListHeapStorage(base.Handle):
         to the node in question.
         """
         # Disallow duplicate values for now
+        currptr = Storage.Handle(value, 0)
+        self._push_handle(currptr)
+
+    def _push_handle(self, handle):
+        """
+        Pushes a handle that does not exist onto the heap.
+        This method is called from the push (or set_comparator)
+        methods.
+        """
         curr = len(self.values)
-        currptr = ListHeapStorage.Handle(value, 0)
         if self.count >= curr:
-            currptr.index = curr
+            handle.index = curr
             # we are saturated so add to end and upheap
-            self.values.append(currptr)
+            self.values.append(handle)
         else:
             # find the first spot and upheap from there
             for i,n in enumerate(self.values):
                 if n is None:
-                    currptr.index = i
-                    self.values[i] = currptr
+                    handle.index = i
+                    self.values[i] = handle
                     break
         self.count += 1
         
-        # So currptr is at a given point, so upheap from there
-        self.values[self._upheap(currptr.index)]
+        # So handle is at a given point, so upheap from there
+        self.values[self._upheap(handle.index)]
 
     def pop(self):
         """
@@ -155,9 +181,9 @@ class ListHeapStorage(base.Handle):
             curr = parent
         return curr
 
-    class Handle(base.Handle):
+    class Handle(BaseHandle):
         def __init__(self, value, index):
-            super(ListHeapStorage.Handle, self).__init__(value)
+            super(Storage.Handle, self).__init__(value)
             self.index = index
 
         def __repr__(self): return str(self)

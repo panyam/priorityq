@@ -12,10 +12,21 @@ class Handle(object):
     @property
     def value(self): return self._value
 
-class HeapStorage(object):
+class Storage(object):
+    def __iter__(self):
+        return []
+
     def heapify(self, values):
         """
         Adds a bunch of values to the heap.
+        """
+        pass
+
+    def set_comparator(self, cmpfunc):
+        """
+        Set's the comparator function and re-heapifies the elements
+        currently stored.  Note that this does not invalidate any 
+        handles that are maintained for the elements in this storage.
         """
         pass
 
@@ -26,6 +37,7 @@ class HeapStorage(object):
         """
         return None
 
+    @property
     def top(self):
         """
         Returns a handle to the top value.
@@ -38,7 +50,7 @@ class HeapStorage(object):
         """
         return None
 
-    def find(self, value, from = None):
+    def find(self, value):
         """
         Returns a handle to the node that contains the particular key.
         If the from parameter is provided, then the seach is performed relative
@@ -52,6 +64,7 @@ class HeapStorage(object):
         """
         pass
 
+    @property
     def is_empty(self):
         """
         Tells if the heap is empty.

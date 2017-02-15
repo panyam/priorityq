@@ -1,8 +1,15 @@
 
 class PQ(object):
-    def __init__(self, storage):
-        self.storage = storage
-        self.pointsByValue = {}
+    def __init__(self, values = None, store = None, comparator = cmp):
+        if not store:
+            from storage import binheap
+            store = binheap.Storage()
+        self.storage = store
+        self.storage.comparator = cmp
+
+        self.handlesByValue = {}
+        values = values or []
+        for v in values: self.push(v)
 
     def top(self):
         return self.storage.top()
@@ -32,4 +39,7 @@ class PQ(object):
         v = self.handlesByValue.get(value, [])
         if v: v = v[0]
         return v
+
+    def __iter__(self):
+        return iter(self.storage)
 

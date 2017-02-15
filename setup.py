@@ -40,11 +40,12 @@ def get_version():
         return str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
 
 def get_description():
-    return open("README.md").read()
+    return open("README.rst").read()
 
 setup(name="priorityq",
       version=get_version(),
       requires = [ ],
+      test_requires = [ "pytest" ],
       description="A clean priority queue library with several types and utility helpers.",
       long_description=get_description(),
       author="Sri Panyam",
