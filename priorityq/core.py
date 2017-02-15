@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Hello World
+"""
 
 class PQ(object):
+    """A flexible PriorityQueue wrapper to allow deletions, fast findings and updates of element priorities."""
     def __init__(self, values = None, comparator = cmp,
-                 allow_duplicates = False, store = None):
+                 duplicates = False, store = None):
         """Returns a new PriorityQueue instance.
 
         Keyword Arguments:
@@ -19,7 +23,7 @@ class PQ(object):
         if not store:
             from storage import binheap
             store = binheap.Storage()
-        self.allow_duplicates = allow_duplicates
+        self.duplicates = duplicates
         self.storage = store
         self.storage.comparator = comparator
 
