@@ -9,7 +9,8 @@ class PQ(object):
                  duplicates = False, store = None):
         """Returns a new PriorityQueue instance.
 
-        Keyword Arguments:
+        Parameters:
+        -----------
             values      --  The values to be initially added to the heap.
             comparator  --  The comparator function to be used to organise the values by.  
                             If one is not provided then the standard comparator (cmp) is used.
@@ -43,11 +44,9 @@ class PQ(object):
     def push(self, value_or_handle):
         """Pushes a new value onto the PQ.
 
-        If the value already exists then the duplicate flag (passed in the initializer) determines
-        the behaviour:
-            duplicate = True    =>  If the value is a handle then the entry is replaced.  Otherwise
-                                    the value is added (as a duplicate)
-            duplicate = False   =>  The value is replaced.
+        If the value already exists then the 'duplicates' flag (passed in the initializer) determines the behaviour:
+            * **duplicate = True**    =>  If the value is a handle then the entry is replaced.  Otherwise the value is added (as a duplicate)
+            * **duplicate = False**   =>  The value is replaced.
 
         Returns a handle to the value within the PQ.
         """

@@ -66,7 +66,6 @@ class Storage(BaseStorage):
         Pushes a new value onto this heap storage and returns a Handle
         to the node in question.
         """
-        # Disallow duplicate values for now
         currptr = Storage.Handle(value, 0)
         self._push_handle(currptr)
         return currptr
