@@ -112,7 +112,7 @@ def profile_shortest_path(nodes, edges, source, dest, heapmodule):
     dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest, heapmodule)
     endtime = time.time()
     timetaken = endtime - starttime
-    print "HeapModule: %s, SP (%d -> %d), Distance = %d, Nodes Processed: %d, Time Taken: %f seconds" % (heapmodule.__name__, source, dest, dist, numfinds, timetaken)
+    print "HeapModule: %s, SP (%d -> %d), Distance = %d, Nodes Processed: %d, Time Taken: %f seconds, %f nodes/seconds" % (heapmodule.__name__, source, dest, dist, numfinds, timetaken, numfinds / float(timetaken))
     return numfinds, timetaken
 
 def shortest_path(nodes, edges, numnodes, numedges, heapmodules, test_nodes):
@@ -129,7 +129,7 @@ def shortest_path(nodes, edges, numnodes, numedges, heapmodules, test_nodes):
             totalnodes[hindex] += nodes_processed
             totaltimes[hindex] += timetaken
     for hindex, heapmodule in enumerate(heapmodules):
-        print "Heapmodule: %s, Num Tries: %f, Total Nodes: %d, Total Time: %f seconds, Average: %f seconds" % (numtries, totalnodes[hindex], totaltimes[hindex], totaltimes[hindex] / float(numtries))
+        print "Heapmodule: %s, Total Nodes: %d, Total Time: %f seconds, Nodes per second: %f seconds" % (heapmodule.__name__, totalnodes[hindex], totaltimes[hindex], totalnodes[hindex] / float(totaltimes[hindex]))
 
 def run_tests(graph_path, numtries, heapmodule = None):
     if heapmodule:
