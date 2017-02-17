@@ -15,26 +15,26 @@ class Handle(object):
         return self._value
 
 class Storage(object):
-    """Base class of all storage strategies that can back a priority queue."""
-    def __iter__(self):
-        return []
-
-    def heapify(self, values):
-        """Heapifies a collection of values onto this heap.
-
-        **Parameters**
-
-        values  -   The iteratable of values that are to be added.
-
-        **Returns**
-
-        A list of handles for the values that were actually added onto the heap.
+    """Base class of all storage strategies that can back a priority queue.
 
         **Implementations**
 
-        ``priorityqueue.storage.binheap.Storage``
-        """
+        ``priorityq.storage.binheap.Storage``
+        ``priorityq.storage.binaryheap.Storage``
+    """
+    def __init__(self, cmpfunc = cmp):
+        self._cmpfunc = cmpfunc
+
+    def clear(self):
+        """Removes all elements from the heap."""
         pass
+
+    def all_handles(self):
+        """Returns a list of all the values in the heap."""
+        return []
+
+    def adjust(self, handle):
+        """ Called to move a particular value to the correct position in the heap after it has been modified."""
 
     def push(self, value):
         """Pushes a new value onto the storage.
@@ -60,13 +60,40 @@ class Storage(object):
         """Remove a value that is referenced by a particular handle from the heap."""
         pass
 
-    @property
-    def is_empty(self):
-        """Return True if the heap is empty, false otherwise."""
-        return False
+    def heapify(self, values):
+        """Heapifies a collection of values onto this heap.
+
+        **Parameters**
+
+        values  -   The iteratable of values that are to be added.
+
+        **Returns**
+
+        A list of handles for the values that were actually added onto the heap.
+        """
+        return map(self.push, values)
 
     def __len__(self):
         """Returns the number of elements in the heap."""
         return 0
 
+    def __iter__(self):
+        for h in self.all_handles(): yield h
 
+    @property
+    def comparator(self):
+        """Returns the comparator currently used to prioritize the elements in this heap."""
+        return self._cmpfunc
+
+    @comparator.setter
+    def comparator(self, cmpfunc):
+        """Setter for the comparator."""
+        self._cmpfunc = cmpfunc
+        self._comparator_changed()
+
+    def _comparator_changed(self):
+        """Method invoked when the comparator has been modified and values in the heap need to be reprioritized.  Default behaviour is to simply make a copy of all the values, clear the heap and re-insert them"""
+        handles = self.all_handles()
+        self.clear()
+        for h in handles:
+            self.push(h.value)

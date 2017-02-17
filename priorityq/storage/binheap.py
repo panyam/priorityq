@@ -2,58 +2,43 @@
 from base import Handle as BaseHandle
 from base import Storage as BaseStorage
 
+class Handle(BaseHandle):
+    def __init__(self, value, index):
+        super(Handle, self).__init__(value)
+        self.index = index
+
+    def __repr__(self): return str(self)
+    def __str__(self):
+        return "<Ptr (0x%x), Index: %d, Value: %s>" % (id(self), self.index, str(self.value))
+
 class Storage(BaseStorage):
     """
     A heap implemented as an array of elements where a node at index 
     i has children at indexes 2*i+1 and 2*i+2
     """
     def __init__(self, cmpfunc = cmp):
-        self._values = []
-        self._cmpfunc = cmpfunc
-        self.comparator = cmpfunc
-
-    @property
-    def comparator(self):
-        return self._cmpfunc
-
-    @comparator.setter
-    def comparator(self, cmpfunc):
-        self._cmpfunc = cmpfunc
+        super(Storage, self).__init__(cmpfunc)
+        self._handles = []
         self._count = 0
-        old_values = self._values
-        self._values = []
-        for v in old_values:
-            if v:
-                self.push_handle(v)
 
-    def heapify(self, values):
-        """
-        Adds a bunch of values to the heap.
-        Returns the handles to all the values inserted
-        """
-        return map(self.push, values)
-
-    @property
     def top(self):
         """
         Returns a handle to the top value.
         """
-        return self._values[0]
+        return self._handles[0]
 
-    @property
-    def is_empty(self):
-        """
-        Tells if the heap is empty.
-        """
-        return self._count == 0
+    def clear(self):
+        """Removes all elements from the heap."""
+        self._count = 0
+        self._handles = []
 
-    def __iter__(self):
-        """
-        Iterates through the values yielding them in order of priority.
-        """
-        out = self._values[:]
-        out.sort(cmp = self._cmpfunc)
-        for handle in out: yield handle.value
+    def all_handles(self):
+        out = self._handles[:]
+        out.sort(cmp = lambda x,y: self._cmpfunc(x.value, y.value))
+        return out
+
+    def __nonzero__(self):
+        return self._count > 0
 
     def __len__(self):
         """
@@ -66,7 +51,7 @@ class Storage(BaseStorage):
         Pushes a new value onto this heap storage and returns a Handle
         to the node in question.
         """
-        currptr = Storage.Handle(value, 0)
+        currptr = Handle(value, 0)
         self._push_handle(currptr)
         return currptr
 
@@ -76,30 +61,30 @@ class Storage(BaseStorage):
         This method is called from the push (or set_comparator)
         methods.
         """
-        curr = len(self._values)
+        curr = len(self._handles)
         if self._count >= curr:
             handle.index = curr
             # we are saturated so add to end and upheap
-            self._values.append(handle)
+            self._handles.append(handle)
         else:
             # find the first spot and upheap from there
-            for i,n in enumerate(self._values):
+            for i,n in enumerate(self._handles):
                 if n is None:
                     handle.index = i
-                    self._values[i] = handle
+                    self._handles[i] = handle
                     break
         self._count += 1
         
         # So handle is at a given point, so upheap from there
-        self._values[self._upheap(handle.index)]
+        self._handles[self._upheap(handle.index)]
 
     def pop(self):
         """
         Pops the top value and returns the value held by the last top value.
         """
-        return self.remove(self._values[0])
+        return self.remove(self._handles[0])
 
-    def reheap(self, handle):
+    def adjust(self, handle):
         """
         Called when the value pointed by the handle has been updated so a 
         possible reheaping is required.
@@ -108,13 +93,13 @@ class Storage(BaseStorage):
         curr = handle.index
         if self._upheap(curr) == curr:
             # nothing happened, then try down heaping it
-            size = len(self._values)
+            size = len(self._handles)
             curr = handle.index
             while curr < size:
                 left = 2 * curr + 1
                 right = 2 * curr + 2
-                leftPtr = None if left >= size else self._values[left]
-                rightPtr = None if right >= size else self._values[right]
+                leftPtr = None if left >= size else self._handles[left]
+                rightPtr = None if right >= size else self._handles[right]
                 if not leftPtr and not rightPtr: 
                     # we are in the right spot
                     return
@@ -130,15 +115,15 @@ class Storage(BaseStorage):
                     smaller = right
 
                 # See we are smaller than the "smaller" child, if not, swap with it
-                if self._cmpfunc(handle.value, self._values[smaller].value) < 0:
+                if self._cmpfunc(handle.value, self._handles[smaller].value) < 0:
                     # We are smaller than the smaller child so we are in right spot
                     return
 
                 # otherwise swap
-                self._values[curr] = self._values[smaller]
-                self._values[curr].index = curr
-                self._values[smaller] = handle
-                self._values[smaller].index = smaller
+                self._handles[curr] = self._handles[smaller]
+                self._handles[curr].index = curr
+                self._handles[smaller] = handle
+                self._handles[smaller].index = smaller
                 curr = smaller
             return handle
         
@@ -146,14 +131,14 @@ class Storage(BaseStorage):
         """
         Removes the node referenced by the handle from the heap.
         """
-        size = len(self._values)
+        size = len(self._handles)
         curr = handle.index
         while curr < size:
             left = 2 * curr + 1
             right = 2 * curr + 2
-            leftPtr = None if left >= size else self._values[left]
-            rightPtr = None if right >= size else self._values[right]
-            # self._values[curr] = None
+            leftPtr = None if left >= size else self._handles[left]
+            rightPtr = None if right >= size else self._handles[right]
+            # self._handles[curr] = None
             which = -1
             if not leftPtr and rightPtr:
                 which = right
@@ -166,35 +151,23 @@ class Storage(BaseStorage):
                     which = left
                 else:
                     which = right
-            self._values[curr] = self._values[which]
-            self._values[curr].index = curr
-            self._values[which] = handle
-            self._values[which].index = which
+            self._handles[curr] = self._handles[which]
+            self._handles[curr].index = curr
+            self._handles[which] = handle
+            self._handles[which].index = which
             curr = which
         self._count -= 1
-        self._values[handle.index] = None
+        self._handles[handle.index] = None
         return handle
 
     def _upheap(self, curr):
         while curr > 0:
             parent = (curr - 1) / 2
-            if self._cmpfunc(self._values[parent].value,self._values[curr].value) <= 0:
+            if self._cmpfunc(self._handles[parent].value,self._handles[curr].value) <= 0:
                 break
             # swap the entries
-            self._values[parent].index = curr
-            self._values[curr].index = parent
-            self._values[parent],self._values[curr] = self._values[curr],self._values[parent]
+            self._handles[parent].index = curr
+            self._handles[curr].index = parent
+            self._handles[parent],self._handles[curr] = self._handles[curr],self._handles[parent]
             curr = parent
         return curr
-
-    class Handle(BaseHandle):
-        def __init__(self, value, index):
-            super(Storage.Handle, self).__init__(value)
-            self.index = index
-
-        def __repr__(self): return str(self)
-        def __str__(self):
-            return "<Ptr (0x%x), Index: %d, Value: %s>" % (id(self), self.index, str(self.value))
-
-        def __cmp__(self, another):
-            return cmp(self.value, another.value)
