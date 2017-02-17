@@ -18,6 +18,7 @@ class Storage(BaseStorage):
     """
     def __init__(self, cmpfunc = cmp):
         super(Storage, self).__init__(cmpfunc)
+        self._empty_indexes = []
         self._handles = []
         self._count = 0
 
@@ -51,32 +52,21 @@ class Storage(BaseStorage):
         Pushes a new value onto this heap storage and returns a Handle
         to the node in question.
         """
-        currptr = Handle(value, 0)
-        self._push_handle(currptr)
-        return currptr
-
-    def _push_handle(self, handle):
-        """
-        Pushes a handle that does not exist onto the heap.
-        This method is called from the push (or set_comparator)
-        methods.
-        """
+        handle = Handle(value, 0)
         curr = len(self._handles)
-        if self._count >= curr:
+        if not self._empty_indexes:
             handle.index = curr
             # we are saturated so add to end and upheap
             self._handles.append(handle)
         else:
-            # find the first spot and upheap from there
-            for i,n in enumerate(self._handles):
-                if n is None:
-                    handle.index = i
-                    self._handles[i] = handle
-                    break
+            i = self._empty_indexes.pop()
+            handle.index = i
+            self._handles[i] = handle
         self._count += 1
         
         # So handle is at a given point, so upheap from there
         self._handles[self._upheap(handle.index)]
+        return handle
 
     def pop(self):
         """
@@ -138,7 +128,6 @@ class Storage(BaseStorage):
             right = 2 * curr + 2
             leftPtr = None if left >= size else self._handles[left]
             rightPtr = None if right >= size else self._handles[right]
-            # self._handles[curr] = None
             which = -1
             if not leftPtr and rightPtr:
                 which = right
@@ -158,6 +147,7 @@ class Storage(BaseStorage):
             curr = which
         self._count -= 1
         self._handles[handle.index] = None
+        self._empty_indexes.append(handle.index)
         return handle
 
     def _upheap(self, curr):

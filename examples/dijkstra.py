@@ -1,10 +1,11 @@
 
+import cProfile
 import sys, gzip
 import time, random
 from priorityq import PQ
 from collections import defaultdict
 INFINITY = sys.maxint
-from priorityq.storage import binheap as heapmodule
+from priorityq.storage import listheap as heapmodule
 
 def dijkstra(nodes, edges, source, target):
     """
@@ -61,7 +62,7 @@ def dijkstra(nodes, edges, source, target):
     return distances[target], parents, numfinds, numadjusts, numpushes
 
 def lines_from(path):
-    with (gzip.GzipFile(graph_path) if graph_path.lower().endswith(".gz") else open(graph_path)) as infile:
+    with (gzip.GzipFile(path) if path.lower().endswith(".gz") else open(path)) as infile:
         lines = infile.read().split("\n")
         for line in lines:
             l = [l.strip() for l in line.split(" ") if l.strip()]
@@ -93,33 +94,41 @@ def read_graph(graph_path):
     assert numedges == edgecount
     return nodes, edges, numnodes, numedges
 
-def shortest_path(graph_path, numtries = 10):
+def random_nodes(numnodes):
+    source = int(random.random() * numnodes)
+    dest = int(random.random() * numnodes)
+    while dest == source:
+        dest = int(random.random() * numnodes)
+    return source, dest
+
+def profile_shortest_path(nodes, edges, source, dest):
+    starttime = time.time()
+    dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest)
+    endtime = time.time()
+    timetaken = endtime - starttime
+    print "Dijkstra from %d -> %d, Distance = %d, Nodes Processed: %d, Time Taken: %f seconds" % (source, dest, dist, numfinds, timetaken)
+    return numfinds, timetaken
+
+def shortest_path(nodes, edges, numnodes, numedges, numtries = 10):
     # The graph file contains entry of the following format:
     # c <comment>
     # a source target dist
     # p sp numnodes numedges
 
-    nodes, edges, numnodes, numedges = read_graph(graph_path)
-
     totaltime = 0
     totalnodes = 0
     for i in xrange(numtries):
-        source = int(random.random() * numnodes)
-        dest = int(random.random() * numnodes)
-        while dest == source:
-            dest = int(random.random() * numnodes)
-        starttime = time.time()
-        dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest)
-        endtime = time.time()
-        timetaken = endtime - starttime
-        print "Dijkstra from %d -> %d, Distance = %d, Nodes Processed: %d, Time Taken: %f seconds" % (source, dest, dist, numfinds, timetaken)
-        totalnodes += numfinds
+        source, dest = random_nodes(numnodes)
+        nodes_processed, timetaken = profile_shortest_path(nodes, edges, source, dest)
+        totalnodes += nodes_processed
         totaltime += timetaken
-
     print "Num Tries: %f, Total Nodes: %d, Total Time: %f seconds, Average: %f seconds" % (numtries, totalnodes, totaltime, totaltime / float(numtries))
 
+def run_tests(graph_path, numtries):
+    nodes, edges, numnodes, numedges = read_graph(graph_path)
+    shortest_path(nodes, edges, numnodes, numedges, numtries)
 
 if __name__ == "__main__":
     graph_path = sys.argv[1]
     numtries = int(sys.argv[2])
-    shortest_path(graph_path, numtries)
+    run_tests(graph_path, numtries)

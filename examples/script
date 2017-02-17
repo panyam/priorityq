@@ -1,0 +1,5 @@
+from dijkstra import *
+nodes, edges, numnodes, numedges = read_graph("data/USA-road-d.BAY.gr.gz")
+source, dest = random_nodes(numnodes)
+print "Source, Dest: ", source, dest
+cProfile.run("profile_shortest_path(nodes, edges, source, dest)")
