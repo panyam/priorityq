@@ -1,8 +1,9 @@
 
-import cProfile
+import cProfile, importlib
 import sys, gzip
 import time, random
 from priorityq import PQ
+import priorityq.storage
 from collections import defaultdict
 INFINITY = sys.maxint
 
@@ -114,7 +115,7 @@ def profile_shortest_path(nodes, edges, source, dest, heapmodule):
     print "HeapModule: %s, SP (%d -> %d), Distance = %d, Nodes Processed: %d, Time Taken: %f seconds" % (heapmodule.__name__, source, dest, dist, numfinds, timetaken)
     return numfinds, timetaken
 
-def shortest_path(nodes, edges, numnodes, numedges, heapmodules, numtries = 10):
+def shortest_path(nodes, edges, numnodes, numedges, heapmodules, test_nodes):
     # The graph file contains entry of the following format:
     # c <comment>
     # a source target dist
@@ -122,8 +123,7 @@ def shortest_path(nodes, edges, numnodes, numedges, heapmodules, numtries = 10):
 
     totaltimes = [0] * len(heapmodules)
     totalnodes = [0] * len(heapmodules)
-    for i in xrange(numtries):
-        source, dest = random_nodes(numnodes)
+    for source,dest in test_nodes:
         for hindex, heapmodule in enumerate(heapmodules):
             nodes_processed, timetaken = profile_shortest_path(nodes, edges, source, dest, heapmodule)
             totalnodes[hindex] += nodes_processed
@@ -131,17 +131,25 @@ def shortest_path(nodes, edges, numnodes, numedges, heapmodules, numtries = 10):
     for hindex, heapmodule in enumerate(heapmodules):
         print "Heapmodule: %s, Num Tries: %f, Total Nodes: %d, Total Time: %f seconds, Average: %f seconds" % (numtries, totalnodes[hindex], totaltimes[hindex], totaltimes[hindex] / float(numtries))
 
-def run_tests(graph_path, numtries):
-    from priorityq.storage import binheap
-    from priorityq.storage import listheap
-    heapmodules = [
-        binheap,
-        listheap
-    ]
+def run_tests(graph_path, numtries, heapmodule = None):
+    if heapmodule:
+        heapmodules = [heapmodule]
+    else:
+        from priorityq.storage import binheap
+        from priorityq.storage import listheap
+        heapmodules = [
+            binheap,
+            listheap
+        ]
     nodes, edges, numnodes, numedges = read_graph(graph_path)
-    shortest_path(nodes, edges, numnodes, numedges, heapmodules, numtries)
+    test_nodes = [random_nodes(numnodes) for i in range(numtries)]
+    shortest_path(nodes, edges, numnodes, numedges, heapmodules, test_nodes)
 
 if __name__ == "__main__":
     graph_path = sys.argv[1]
     numtries = int(sys.argv[2])
-    run_tests(graph_path, numtries)
+    heapmodule = None
+    if len(sys.argv) > 3:
+        heapmodule = importlib.import_module("priorityq.storage." + sys.argv[3])
+        import pdb ; pdb.set_trace()
+    run_tests(graph_path, numtries, heapmodule)
