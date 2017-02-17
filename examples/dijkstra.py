@@ -5,7 +5,7 @@ import time, random
 from priorityq import PQ
 from collections import defaultdict
 INFINITY = sys.maxint
-from priorityq.storage import listheap as heapmodule
+from priorityq.storage import binheap as heapmodule
 
 def dijkstra(nodes, edges, source, target):
     """
@@ -15,7 +15,7 @@ def dijkstra(nodes, edges, source, target):
     # between source and target.
     distances = {source: 0, target: INFINITY}
     parents = defaultdict(lambda: None)
-    known_nodes = {source}
+    known_nodes = set([source])
     nodeheap = PQ([source, target], 
                   store = heapmodule.Storage(),
                   comparator = lambda x,y: distances[x] - distances[y])
@@ -62,13 +62,18 @@ def dijkstra(nodes, edges, source, target):
     return distances[target], parents, numfinds, numadjusts, numpushes
 
 def lines_from(path):
-    with (gzip.GzipFile(path) if path.lower().endswith(".gz") else open(path)) as infile:
-        lines = infile.read().split("\n")
-        for line in lines:
-            l = [l.strip() for l in line.split(" ") if l.strip()]
-            if not l or l[0] not in ["a", "p"]:
-                continue
-            yield l
+    if path.lower().endswith(".gz"):
+        infile = gzip.GzipFile(path)
+    else:
+        infile = open(path)
+
+    lines = infile.read().split("\n")
+    for line in lines:
+        l = [l.strip() for l in line.split(" ") if l.strip()]
+        if not l or l[0] not in ["a", "p"]:
+            continue
+        yield l
+    infile.close()
 
 def read_graph(graph_path):
     nodes = set()
