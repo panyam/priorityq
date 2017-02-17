@@ -5,9 +5,9 @@ import time, random
 from priorityq import PQ
 from collections import defaultdict
 INFINITY = sys.maxint
-from priorityq.storage import binheap as heapmodule
 
-def dijkstra(nodes, edges, source, target):
+
+def dijkstra(nodes, edges, source, target, heapmodule):
     """
     Return the shortest path from the source to target.
     """
@@ -106,15 +106,15 @@ def random_nodes(numnodes):
         dest = int(random.random() * numnodes)
     return source, dest
 
-def profile_shortest_path(nodes, edges, source, dest):
+def profile_shortest_path(nodes, edges, source, dest, heapmodule):
     starttime = time.time()
-    dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest)
+    dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest, heapmodule)
     endtime = time.time()
     timetaken = endtime - starttime
     print "Dijkstra from %d -> %d, Distance = %d, Nodes Processed: %d, Time Taken: %f seconds" % (source, dest, dist, numfinds, timetaken)
     return numfinds, timetaken
 
-def shortest_path(nodes, edges, numnodes, numedges, numtries = 10):
+def shortest_path(nodes, edges, numnodes, numedges, heapmodule, numtries = 10):
     # The graph file contains entry of the following format:
     # c <comment>
     # a source target dist
@@ -124,14 +124,15 @@ def shortest_path(nodes, edges, numnodes, numedges, numtries = 10):
     totalnodes = 0
     for i in xrange(numtries):
         source, dest = random_nodes(numnodes)
-        nodes_processed, timetaken = profile_shortest_path(nodes, edges, source, dest)
+        nodes_processed, timetaken = profile_shortest_path(nodes, edges, source, dest, heapmodule)
         totalnodes += nodes_processed
         totaltime += timetaken
     print "Num Tries: %f, Total Nodes: %d, Total Time: %f seconds, Average: %f seconds" % (numtries, totalnodes, totaltime, totaltime / float(numtries))
 
 def run_tests(graph_path, numtries):
+    from priorityq.storage import binheap as heapmodule
     nodes, edges, numnodes, numedges = read_graph(graph_path)
-    shortest_path(nodes, edges, numnodes, numedges, numtries)
+    shortest_path(nodes, edges, numnodes, numedges, heapmodule, numtries)
 
 if __name__ == "__main__":
     graph_path = sys.argv[1]
