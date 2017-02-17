@@ -14,32 +14,22 @@ class Storage(BaseStorage):
     def __init__(self, cmpfunc = cmp):
         super(Storage, self).__init__(cmpfunc)
         self._handles = []
-        self._count = 0
+
+    def clear(self):
+        """Removes all elements from the heap."""
+        self._handles = []
 
     def top(self):
         """
         Returns a handle to the top value.
         """
-        return min(self._handles, key = lambda x: x.value)
-
-    def clear(self):
-        """Removes all elements from the heap."""
-        self._count = 0
-        self._handles = []
+        index, handle = self._minindex()
+        return handle
 
     def all_handles(self):
         out = self._handles[:]
         out.sort(cmp = lambda x,y: self._cmpfunc(x.value, y.value))
         return out
-
-    def __nonzero__(self):
-        return self._count > 0
-
-    def __len__(self):
-        """
-        Returns the number of elements in the heap.
-        """
-        return self._count
 
     def push(self, value):
         """
@@ -54,11 +44,8 @@ class Storage(BaseStorage):
         """
         Pops the top value and returns the value held by the last top value.
         """
-        index,handle = min(enumerate(self._handles), key = lambda x: x[1].value)
-        for i in xrange(index + 1, len(self._handles)):
-            self._handles[i].index = i - 1
-        del self._handles[index]
-        return handle
+        index,handle = self._minindex()
+        return self.remove(handle)
 
     def remove(self, handle):
         """
@@ -70,3 +57,18 @@ class Storage(BaseStorage):
             self._handles[i].index = i
         return handle
 
+    def __nonzero__(self):
+        return len(self._handles) != 0
+
+    def __len__(self):
+        """
+        Returns the number of elements in the heap.
+        """
+        return len(self._handles)
+
+    def _minindex(self):
+        index,handle = -1,None
+        for i,h in enumerate(self._handles):
+            if handle is None or self._cmpfunc(h.value, handle.value) < 0:
+                index,handle = i,h
+        return index,handle

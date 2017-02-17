@@ -34,7 +34,7 @@ class Storage(BaseStorage):
         self._handles = []
 
     def all_handles(self):
-        out = self._handles[:]
+        out = [h for h in self._handles if h]
         out.sort(cmp = lambda x,y: self._cmpfunc(x.value, y.value))
         return out
 
@@ -52,20 +52,26 @@ class Storage(BaseStorage):
         Pushes a new value onto this heap storage and returns a Handle
         to the node in question.
         """
-        handle = Handle(value, 0)
-        curr = len(self._handles)
-        if not self._empty_indexes:
-            handle.index = curr
-            # we are saturated so add to end and upheap
-            self._handles.append(handle)
-        else:
+        handle = Handle(value, self._count)
+        self._count += 1
+        if self._empty_indexes:
             i = self._empty_indexes.pop()
             handle.index = i
             self._handles[i] = handle
-        self._count += 1
+        else:
+            # we are saturated so add to end and upheap
+            self._handles.append(handle)
+
+            # And extend with more empty space at the end so we can ammortize push speeds
+            newlen = self._count
+            newcapacity = ((newlen * 3) / 2)
+            spare = max(8, newcapacity - newlen)
+            nones = [None] * spare
+            self._handles.extend(nones)
+            self._empty_indexes.extend(range(newlen + spare - 1, newlen - 1, -1))
         
         # So handle is at a given point, so upheap from there
-        self._handles[self._upheap(handle.index)]
+        self._upheap(handle.index)
         return handle
 
     def pop(self):
@@ -147,17 +153,40 @@ class Storage(BaseStorage):
             curr = which
         self._count -= 1
         self._handles[handle.index] = None
-        self._empty_indexes.append(handle.index)
+        self._release_index(handle.index)
         return handle
 
+    def _release_index(self, index):
+        A = self._empty_indexes
+        lo = 0
+        hi = len(A) - 1
+        while lo <= hi:
+            mid = (lo + hi) / 2
+            assert A[mid] != index      # Value should not have been here to begin with
+            if index < A[mid]:          # go to right half
+                lo = mid + 1
+            else:                       # go to left half
+                hi = mid - 1
+        A.insert(lo, index)
+
     def _upheap(self, curr):
+        start = curr
+        parent_is_empty = False
         while curr > 0:
             parent = (curr - 1) / 2
-            if self._cmpfunc(self._handles[parent].value,self._handles[curr].value) <= 0:
-                break
+            parent_handle = self._handles[parent]
+            parent_is_empty = parent_handle is None
+            if parent_handle:
+                if self._cmpfunc(parent_handle.value,self._handles[curr].value) <= 0:
+                    break
+                parent_handle.index = curr
+
             # swap the entries
-            self._handles[parent].index = curr
             self._handles[curr].index = parent
             self._handles[parent],self._handles[curr] = self._handles[curr],self._handles[parent]
             curr = parent
+
+        # If the 
+        if parent_is_empty: self._release_index(start)
+
         return curr

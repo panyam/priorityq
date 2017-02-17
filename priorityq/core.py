@@ -18,7 +18,7 @@ class PQ(object):
                             This can be overridden by any other instances that inherits the Storage
                             class.  See Storage for more details.
         """
-        if not store:
+        if store is None:
             from storage import binheap
             store = binheap.Storage()
         self.duplicates = duplicates
