@@ -61,6 +61,7 @@ def test_remove():
     assert pq.top.value.value == 1
     # Pop and see the min change
     pq.pop()
+    assert pq.find(values[1]) == None
     assert pq.top.value.value == 2
 
     # Remove and see what happens

@@ -29,7 +29,6 @@ def dijkstra(nodes, edges, source, target):
     last = None
     while last != target and nodeheap:
         # get the node that is closest to the source at this point
-        import ipdb ; ipdb.set_trace()
         currnode = nodeheap.pop()
         if currnode in known_nodes:
             continue
@@ -101,10 +100,11 @@ def shortest_path(graph_path, numtries = 10):
         dest = int(random.random() * numnodes)
         while dest == source:
             dest = int(random.random() * numnodes)
+        print "Performing Dijkstra from %d -> %d...." % (source, dest)
         starttime = time.time()
         dist, parents = dijkstra(nodes, edges, source, dest)
         endtime = time.time()
-        print "Distance from %d -> %d = %d" % (source, dest, dist)
+        print "Distance = %d" % dist
         totaltime += (endtime - starttime)
 
     print "Num Tries: %f, Total Time: %f seconds, Average: %f seconds" % (numtries, totaltime, totaltime / float(numtries))

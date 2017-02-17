@@ -41,7 +41,12 @@ class PQ(object):
 
     def pop(self):
         """Removes the top value from the PQ and returns its value."""
-        return self.storage.pop().value
+        handle = self.storage.pop()
+        if self.duplicates:
+            self.handlesByValue[handle.value].remove(handle)
+        else:
+            del self.handlesByValue[handle.value]
+        return handle.value
 
     def push(self, value):
         """Pushes a new value onto the PQ.
