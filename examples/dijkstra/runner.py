@@ -151,5 +151,4 @@ if __name__ == "__main__":
     heapmodule = None
     if len(sys.argv) > 3:
         heapmodule = importlib.import_module("priorityq.storage." + sys.argv[3])
-        import pdb ; pdb.set_trace()
     run_tests(graph_path, numtries, heapmodule)
