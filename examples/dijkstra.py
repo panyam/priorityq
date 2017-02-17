@@ -2,9 +2,9 @@
 import sys, gzip
 import time, random
 from priorityq import PQ
-from priorityq.storage import binheap
 from collections import defaultdict
 INFINITY = sys.maxint
+from priorityq.storage import binheap as heapmodule
 
 def dijkstra(nodes, edges, source, target):
     """
@@ -16,6 +16,7 @@ def dijkstra(nodes, edges, source, target):
     parents = defaultdict(lambda: None)
     known_nodes = {source}
     nodeheap = PQ([source, target], 
+                  store = heapmodule.Storage(),
                   comparator = lambda x,y: distances[x] - distances[y])
 
     def neighbours_of(node):
@@ -26,6 +27,9 @@ def dijkstra(nodes, edges, source, target):
         distances[neighbour] = edges[source][neighbour]
         nodeheap.push(neighbour)
 
+    numfinds = 0
+    numadjusts = 0
+    numpushes = 0
     last = None
     while last != target and nodeheap:
         # get the node that is closest to the source at this point
@@ -37,21 +41,24 @@ def dijkstra(nodes, edges, source, target):
         # be "via" its parent (currnode) or directly from the
         # source node if such an edge exists.
         for child in neighbours_of(currnode):
+            numfinds += 1
             childptr = nodeheap.find(child)
             curr_dist = distances[currnode] + edges[currnode][child]
             if child not in distances or curr_dist < distances[child]:
                 distances[child] = curr_dist
                 parents[child] = currnode
             if childptr:
+                numadjusts += 1
                 nodeheap.adjust(childptr)
             else:
+                numpushes += 1
                 nodeheap.push(child)
         last = currnode
         known_nodes.add(currnode)
 
     # Return the list of all parent nodes that can be walked up
     # backwards to extract the path to the source (in reverse)
-    return distances[target], parents
+    return distances[target], parents, numfinds, numadjusts, numpushes
 
 def lines_from(path):
     with (gzip.GzipFile(graph_path) if graph_path.lower().endswith(".gz") else open(graph_path)) as infile:
@@ -95,19 +102,21 @@ def shortest_path(graph_path, numtries = 10):
     nodes, edges, numnodes, numedges = read_graph(graph_path)
 
     totaltime = 0
+    totalnodes = 0
     for i in xrange(numtries):
         source = int(random.random() * numnodes)
         dest = int(random.random() * numnodes)
         while dest == source:
             dest = int(random.random() * numnodes)
-        print "Performing Dijkstra from %d -> %d...." % (source, dest)
         starttime = time.time()
-        dist, parents = dijkstra(nodes, edges, source, dest)
+        dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest)
         endtime = time.time()
-        print "Distance = %d" % dist
-        totaltime += (endtime - starttime)
+        timetaken = endtime - starttime
+        print "Dijkstra from %d -> %d, Distance = %d, Nodes Processed: %d, Time Taken: %f seconds" % (source, dest, dist, numfinds, timetaken)
+        totalnodes += numfinds
+        totaltime += timetaken
 
-    print "Num Tries: %f, Total Time: %f seconds, Average: %f seconds" % (numtries, totaltime, totaltime / float(numtries))
+    print "Num Tries: %f, Total Nodes: %d, Total Time: %f seconds, Average: %f seconds" % (numtries, totalnodes, totaltime, totaltime / float(numtries))
 
 
 if __name__ == "__main__":
