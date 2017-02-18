@@ -60,5 +60,5 @@ To create a PQ simply do:
 
 Links
 `````
-* `Documentation Wiki <https://github.com/panyam/priorityq/wiki>`_
+* `Documentation <http://pythonhosted.org/priorityq/>`_
 * `Website <https://github.com/panyam/priorityq>`_
