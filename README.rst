@@ -40,9 +40,9 @@ To create a PQ simply do:
     # Should print:
     # 1 2 3 4 5 6 7 9 10 20
 
-    handle_10 = pq.find(25)   #   Happens in O(1)
+    handle_10 = pq.find(10)   #   Happens in O(1)
 
-    handle_10.value = 12      #   Modify its value - O(log n)
+    handle_10.value = 25      #   Modify its value - O(log n)
     pq.adjust(handle_10)      #   Indicate to the heap to reprioritise/adjust it
 
     print list(pq)
