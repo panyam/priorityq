@@ -58,7 +58,8 @@ def profile_shortest_path(nodes, edges, source, dest, heapmodule):
         return edges[node].iteritems()
 
     starttime = time.time()
-    dist, parents = shortest_path(source, dest, neighbour_func, heapmodule.Storage)
+    distances, parents = shortest_path(source, dest, neighbour_func, heapmodule.Storage)
+    dist = distances[dest]
     endtime = time.time()
     numfinds = len(parents)
     timetaken = endtime - starttime

@@ -19,8 +19,7 @@ def shortest_path(source, target, neighbour_func, storage_class = None):
                             source.   Default: prioirityq.storage.binheap.Storage
 
     **Returns**
-        A tuple of distance to the target node along with a dictionary that contains the parent
-        node for each node in the traversal from the source.
+        A tuple that contains a map of distances for each node from the source along with a map of each node to its parent.
     """
     # Keeps track of the parent node for a node in the path
     # between source and target.
@@ -62,19 +61,5 @@ def shortest_path(source, target, neighbour_func, storage_class = None):
 
     # Return the list of all parent nodes that can be walked up
     # backwards to extract the path to the source (in reverse)
-    return distances[target], parents
-
-def lines_from(path):
-    if path.lower().endswith(".gz"):
-        infile = gzip.GzipFile(path)
-    else:
-        infile = open(path)
-
-    lines = infile.read().split("\n")
-    for line in lines:
-        l = [l.strip() for l in line.split(" ") if l.strip()]
-        if not l or l[0] not in ["a", "p"]:
-            continue
-        yield l
-    infile.close()
+    return distances, parents
 
