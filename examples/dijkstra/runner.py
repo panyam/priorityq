@@ -4,63 +4,9 @@ import sys, gzip
 import time, random
 from priorityq import PQ
 import priorityq.storage
+from priorityq.algorithms.dijkstra import shortest_path
 from collections import defaultdict
 INFINITY = sys.maxint
-
-
-def dijkstra(nodes, edges, source, target, heapmodule):
-    """
-    Return the shortest path from the source to target.
-    """
-    # Keeps track of the parent node for a node in the path
-    # between source and target.
-    distances = {source: 0, target: INFINITY}
-    parents = defaultdict(lambda: None)
-    known_nodes = set([source])
-    nodeheap = PQ([source, target], 
-                  store = heapmodule.Storage(),
-                  comparator = lambda x,y: distances[x] - distances[y])
-
-    def neighbours_of(node):
-        return edges[node].keys()
-
-    # Add start's neighbours to heap
-    for neighbour in neighbours_of(source):
-        distances[neighbour] = edges[source][neighbour]
-        nodeheap.push(neighbour)
-
-    numfinds = 0
-    numadjusts = 0
-    numpushes = 0
-    last = None
-    while last != target and nodeheap:
-        # get the node that is closest to the source at this point
-        currnode = nodeheap.pop()
-        if currnode in known_nodes:
-            continue
-        # Go through each of the curr node's neighbours
-        # and update it's distances.   It's "new" distance can either
-        # be "via" its parent (currnode) or directly from the
-        # source node if such an edge exists.
-        for child in neighbours_of(currnode):
-            numfinds += 1
-            childptr = nodeheap.find(child)
-            curr_dist = distances[currnode] + edges[currnode][child]
-            if child not in distances or curr_dist < distances[child]:
-                distances[child] = curr_dist
-                parents[child] = currnode
-            if childptr:
-                numadjusts += 1
-                nodeheap.adjust(childptr)
-            else:
-                numpushes += 1
-                nodeheap.push(child)
-        last = currnode
-        known_nodes.add(currnode)
-
-    # Return the list of all parent nodes that can be walked up
-    # backwards to extract the path to the source (in reverse)
-    return distances[target], parents, numfinds, numadjusts, numpushes
 
 def lines_from(path):
     if path.lower().endswith(".gz"):
@@ -108,14 +54,18 @@ def random_nodes(numnodes):
     return source, dest
 
 def profile_shortest_path(nodes, edges, source, dest, heapmodule):
+    def neighbour_func(node):
+        return edges[node].iteritems()
+
     starttime = time.time()
-    dist, parents, numfinds, numadjusts, numpushes = dijkstra(nodes, edges, source, dest, heapmodule)
+    dist, parents = shortest_path(source, dest, neighbour_func, heapmodule.Storage)
     endtime = time.time()
+    numfinds = len(parents)
     timetaken = endtime - starttime
     print "HeapModule: %s, SP (%d -> %d), Distance = %d, Nodes Processed: %d, Time Taken: %f seconds, %f nodes/seconds" % (heapmodule.__name__, source, dest, dist, numfinds, timetaken, numfinds / float(timetaken))
     return numfinds, timetaken
 
-def shortest_path(nodes, edges, numnodes, numedges, heapmodules, test_nodes):
+def profile_all_shortest_paths(nodes, edges, numnodes, numedges, heapmodules, test_nodes):
     # The graph file contains entry of the following format:
     # c <comment>
     # a source target dist
@@ -143,7 +93,7 @@ def run_tests(graph_path, numtries, heapmodule = None):
         ]
     nodes, edges, numnodes, numedges = read_graph(graph_path)
     test_nodes = [random_nodes(numnodes) for i in range(numtries)]
-    shortest_path(nodes, edges, numnodes, numedges, heapmodules, test_nodes)
+    profile_all_shortest_paths(nodes, edges, numnodes, numedges, heapmodules, test_nodes)
 
 if __name__ == "__main__":
     graph_path = sys.argv[1]

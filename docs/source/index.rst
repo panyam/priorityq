@@ -12,6 +12,8 @@ Welcome to PriorityQ's documentation!
 
    apiref
 
+   algorithms
+
 Indices and tables
 ==================
 
