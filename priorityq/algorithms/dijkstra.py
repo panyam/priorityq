@@ -21,12 +21,18 @@ def shortest_path(source, target, neighbour_func, storage_class = None):
     **Returns**
         A tuple that contains a map of distances for each node from the source along with a map of each node to its parent.
     """
-    # Keeps track of the parent node for a node in the path
-    # between source and target.
     storage_class = storage_class or "prioirityq.storage.binheap.Storage"
+
+    # Keep track of the distance of each node to the source node
     distances = {source: 0, target: INFINITY}
+
+    # Keeps track of the parent node for a node in the path between source and target.
     parents = defaultdict(lambda: None)
+
+    # The nodes that are known to have the shortest path in each iteration
     known_nodes = set([source])
+
+    # A heap of nodes is used where they nodes are sorted by their distance to the source node
     nodeheap = PQ([source, target], 
                   store = storage_class(),
                   comparator = lambda x,y: distances[x] - distances[y])
@@ -40,22 +46,27 @@ def shortest_path(source, target, neighbour_func, storage_class = None):
     while last != target and nodeheap:
         # get the node that is closest to the source at this point
         currnode = nodeheap.pop()
-        if currnode in known_nodes:
-            continue
+
+        # If the node is already known then skip its children
+        if currnode in known_nodes: continue
+
         # Go through each of the curr node's neighbours
         # and update it's distances.   It's "new" distance can either
         # be "via" its parent (currnode) or directly from the
         # source node if such an edge exists.
         for child,child_dist in neighbour_func(currnode):
-            childptr = nodeheap.find(child)
             curr_dist = distances[currnode] + child_dist
             if child not in distances or curr_dist < distances[child]:
                 distances[child] = curr_dist
                 parents[child] = currnode
+
+            # Ensure the heap update's the child priority
+            childptr = nodeheap.find(child)
             if childptr:
                 nodeheap.adjust(childptr)
             else:
                 nodeheap.push(child)
+
         last = currnode
         known_nodes.add(currnode)
 
